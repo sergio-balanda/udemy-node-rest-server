@@ -1,36 +1,72 @@
 const { response } = require('express')
+const User = require('../models/user')
+const bcrypt = require('bcryptjs')
 
-const get = (req, res = response) => {
-    const { page, order, q = 'no query' } = req.query
+const get = async (req, res = response) => {
+    const { page, from, order, limit = 5, q = 'no query' } = req.query
+    
+    const [ total , users] = await Promise.all([
+        User.find({state:true}).countDocuments({}),
+        User.find({state:true})
+        .skip(Number(from))
+        .limit(Number(limit))
+    ])
 
     res.status(200).json({
-        message: "get API - controller",
+        users,
+        total,
         page,
         order,
-        q
+        q,
+        from,
+        limit    
     });
 }
 
-const post = (req, res = response) => {
-    const { name, id } = req.body
-    res.status(200).json({
-        message: "post API - controller",
+const post = async (req, res = response) => {
+    const { name, email, password, rol } = req.body
+
+    const salt = bcrypt.genSaltSync(10)
+
+    const user = new User({
         name,
-        id,
+        email,
+        password,
+        rol
+    })
+
+    user.password = bcrypt.hashSync(password,salt)
+    await user.save()
+
+    res.status(200).json({
+        user
     });
 }
 
-const put = (req, res = response) => {
+const put = async (req, res = response) => {
     const { id } = req.params
+    const { _id, password, google, email, ...rest } = req.body
+    
+    if(password){
+        const salt = bcrypt.genSaltSync(10)
+        rest.password = bcrypt.hashSync(password,salt)
+    }
+
+    const user = await User.findByIdAndUpdate(id, rest)
+    
     res.status(200).json({
-        message: "put API - controller",
-        id
+        user
     });
 }
 
-const deleteUser = (req, res = response) => {
+const deleteUser = async (req, res = response) => {
+    const {id} = req.params
+    // const user = await User.findByIdAndDelete(id)
+    const user = await User.findByIdAndUpdate(id,{
+        state:false
+    })
     res.status(200).json({
-        message: "delete API - controller"
+        user
     });
 }
 
