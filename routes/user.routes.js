@@ -7,15 +7,24 @@ const {
   put,
 } = require("../controllers/user.controller")
 const { validateRol, isEmailExist, isUserExist } = require("../helpers/db-validators")
-const { validateFields } = require("../middlewares/validate-fields")
+
+const { 
+  validateJWT, 
+  validateFields, 
+  hasRole 
+} = require("../middlewares")
+
 
 const router = Router()
 
-router.get("/", get)
+router.get("/", [
+  validateJWT
+],get)
 
 router.post(
   "/",
   [
+    validateJWT,
     check("name", "El name es obligatorio").not().isEmpty(),
     check("password", "El password debe tener min 6 caracteres").isLength({
       min: 6,
@@ -30,6 +39,7 @@ router.post(
 );
 
 router.put("/:id", [
+    validateJWT,
     check("id","No es un ID valido").isMongoId(),
     check("id").custom(isUserExist),
     check("rol").custom(validateRol),
@@ -37,6 +47,9 @@ router.put("/:id", [
 ],put)
 
 router.delete("/:id", [
+  validateJWT,
+  //esAdmin,
+  hasRole('ADMIN','VENTAS'),
   check("id","No es un ID valido").isMongoId(),
   check("id").custom(isUserExist),
   validateFields

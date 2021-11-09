@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs')
 
 const get = async (req, res = response) => {
     const { page, from, order, limit = 5, q = 'no query' } = req.query
-    
+    console.log("users ",req.uid)
     const [ total , users] = await Promise.all([
         User.find({state:true}).countDocuments({}),
         User.find({state:true})
@@ -65,6 +65,7 @@ const deleteUser = async (req, res = response) => {
     const user = await User.findByIdAndUpdate(id,{
         state:false
     })
+
     res.status(200).json({
         user
     });
