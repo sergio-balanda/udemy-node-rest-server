@@ -14,8 +14,14 @@ class Server {
     this.middlewares()
 
     //rutes
-    this.userPath = '/api/user'
-    this.authPath = '/api/auth'
+    this.paths = {
+      auth:'/api/auth',
+      users:'/api/user',
+      categories:'/api/categories',
+      products:'/api/products',
+      search:'/api/search'
+    }
+
 
     this.routes();
   }
@@ -32,10 +38,16 @@ class Server {
   }
 
   routes() {
-    this.app.use(this.userPath, 
+    this.app.use(this.paths.users, 
       require('../routes/user.routes'))
-    this.app.use(this.authPath, 
+    this.app.use(this.paths.auth, 
       require('../routes/auth.routes'))
+    this.app.use(this.paths.categories, 
+      require('../routes/category.routes'))
+    this.app.use(this.paths.products, 
+      require('../routes/product.routes'))
+    this.app.use(this.paths.search, 
+      require('../routes/search.routes'))
   }
 
   listen() {

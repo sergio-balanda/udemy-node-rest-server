@@ -2,6 +2,7 @@ const { response } = require("express");
 const User = require("../models/user");
 const { genereteJWT } = require("../helpers/genereteJWT");
 const bcrypt = require("bcryptjs");
+const { googleVerify } = require("../helpers/google-verify");
 
 const login = async (req, res = response) => {
   const { password, email } = req.body;
@@ -38,6 +39,51 @@ const login = async (req, res = response) => {
   }
 };
 
+const googleSignIn = async (req, res = response) => {
+  const { id_token } = req.body
+
+  try {
+    const { email, name, picture } = await googleVerify(id_token)
+
+    let user = await User.findOne({ email })
+
+    if(!user){
+      const data = { 
+        name,
+        email,
+        password:':P',
+        img: picture,
+        google:true,
+        rol:'USER'
+      }
+      user = new User(data)
+      await user.save()
+    }
+
+    if(!user.state){
+      res.status(401).json({
+        msg: 'No autorizado',
+        email
+      })
+    }
+
+    const token = await genereteJWT(user.id);
+
+    res.status(200).json({
+      msg: 'ok',
+      user,
+      token
+    })
+  } catch (error) {
+    res.status(400).json({
+      ok:false,
+      msg: error.message
+    })
+  }
+};
+
+
 module.exports = {
   login,
+  googleSignIn
 };

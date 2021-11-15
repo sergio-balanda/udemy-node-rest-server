@@ -1,12 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acceso denegado</title>
-</head>
-<body>
-    <h1>Acceso denegado</h1>
-</body>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sign-in</title>
+  </head>
+  <body>
+    <h1>Google sign-in</h1>
+    <hr />
+    <div
+      id="g_id_onload"
+      data-client_id="1044470195845-uj0f3auj51baljlttsdedv1f8h6b5hqk.apps.googleusercontent.com"
+      data-auto_prompt="false"
+      data-callback="handleCredentialResponse">
+    </div>
+    <div
+      class="g_id_signin"
+      data-type="standard"
+      data-size="large"
+      data-theme="outline"
+      data-text="sign_in_with"
+      data-shape="rectangular"
+      data-logo_alignment="left"
+    ></div>
+
+    <div>
+      <button id="sign_out">
+        Sigout
+      </button>
+    </div>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        function handleCredentialResponse(response) {
+           // decodeJwtResponse() is a custom function defined by you
+           // to decode the credential response.
+            //    const responsePayload = decodeJwtResponse(response.credential);
+      
+        //    console.log("ID: " + responsePayload.sub);
+        //    console.log('Full Name: ' + responsePayload.name);
+        //    console.log('Given Name: ' + responsePayload.given_name);
+        //    console.log('Family Name: ' + responsePayload.family_name);
+        //    console.log("Image URL: " + responsePayload.picture);
+        //    console.log("Email: " + responsePayload.email);
+            console.log("TOKEN ",response.credential)
+            const body = { id_token: response.credential }
+            fetch('http://localhost:8080/api/auth/google',{
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(body)
+            })
+            .then((response) => response.json())
+            .then((response) => {
+              localStorage.setItem('email',response.user.email)
+              console.log(response)
+            }).catch(err => console.log(err))
+        }
+        const button = document.getElementById('sign_out')
+        button.onclick = () => {
+          google.accounts.id.disableAutoSelect()
+          google.accounts.id.revoke(localStorage.getItem('email'),done=>{
+            localStorage.clear()
+            location.reload()
+          })
+          console.log(google.accounts.id);
+        }
+    </script>
+      
+  </body>
 </html>
